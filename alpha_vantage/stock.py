@@ -52,6 +52,7 @@ class Stock:
 
     def has_trustable_income_5y(self):
         ann_CF_5y = self.cash_flow['annualReports'][:5]
+        occr_list, fccr_list = [], []
         for i in range(4):
             net_income_sum_2y = int(ann_CF_5y[i]['netIncome']) + \
                 int(ann_CF_5y[i+1]['netIncome'])
@@ -66,10 +67,16 @@ class Stock:
                 return False
             if FCF_sum_2y < 0:
                 return False
-            if OCF_sum_2y / net_income_sum_2y < 1:
+            occr = OCF_sum_2y / net_income_sum_2y
+            fccr = FCF_sum_2y / net_income_sum_2y
+            occr_list.append(occr)
+            fccr_list.append(fccr)
+            if occr < 1:
                 return False
-            if FCF_sum_2y / net_income_sum_2y < 0.8:
+            if fccr < 0.8:
                 return False
+        print('Operating Cashflow Conversion Rate: ', occr_list)
+        print('Free Cashflow Conversion Rate: ', fccr_list)
         return True
 
     def has_sufficient_cash(self):
@@ -78,8 +85,6 @@ class Stock:
         cash = int(cur_balance_sheet['cashAndShortTermInvestments'])
         if total_assets < 0 or cash < 0:
             return False
-        print('cash: ', cash)
-        print('total_assets: ', total_assets)
         print('cash asset ratio: ', cash / total_assets)
         return cash / total_assets > 0.1
 
@@ -112,11 +117,13 @@ class Stock:
         weighted_sum_eps = 0
         sum_weights = 0
         for i in range(12):
-            earning = self.income_statement['quarterlyReports'][i]['netIncome']
+            earning = int(
+                self.income_statement['quarterlyReports'][i]['netIncome'])
             eps = earning / stock_shares
             weighted_sum_eps += eps * (12-i)
             sum_weights += 12-i
         weighted_avg_eps = weighted_sum_eps / sum_weights
+        print('Weighted Average EPS: ', weighted_avg_eps)
         return weighted_avg_eps
 
     def get_bps(self):
@@ -124,6 +131,7 @@ class Stock:
         equity = int(cur_balance['totalShareholderEquity'])
         stock_shares = int(cur_balance['commonStockSharesOutstanding'])
         bps = equity / stock_shares
+        print('BPS: ', bps)
         return bps
 
     def get_intrinsic_value(self):
