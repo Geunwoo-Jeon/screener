@@ -1,4 +1,5 @@
 import requests
+import csv
 
 
 class APIClient:
@@ -6,17 +7,59 @@ class APIClient:
         self.apikey = apikey
         self.urlbase = 'https://www.alphavantage.co/query?'
 
-    def call(self, function, params):
+    def get(self, function, params: dict = None):
         url = self.urlbase + f'function={function}'
-        for key, value in params.items():
-            url += f'&{key}={value}'
+        if params:
+            for key, value in params.items():
+                url += f'&{key}={value}'
         url += f'&apikey={self.apikey}'
-        ret = requests.get(url)
-        data = ret.json()
-        return data
+        return requests.get(url)
 
-    def income_statement(self, symbol='IBM'):
+    def overview(self, symbol):
         params = {
             'symbol': symbol
         }
-        return self.call('INCOME_STATEMENT', params)
+        ret = self.get('OVERVIEW', params)
+        return ret.json()
+
+    def dividends(self, symbol):
+        params = {
+            'symbol': symbol
+        }
+        ret = self.get('DIVIDENDS', params)
+        return ret.json()
+
+    def splits(self, symbol):
+        params = {
+            'symbol': symbol
+        }
+        ret = self.get('SPLITS', params)
+        return ret.json()
+
+    def income_statement(self, symbol):
+        params = {
+            'symbol': symbol
+        }
+        ret = self.get('INCOME_STATEMENT', params)
+        return ret.json()
+
+    def balance_sheet(self, symbol):
+        params = {
+            'symbol': symbol
+        }
+        ret = self.get('BALANCE_SHEET', params)
+        return ret.json()
+
+    def cash_flow(self, symbol):
+        params = {
+            'symbol': symbol
+        }
+        ret = self.get('CASH_FLOW', params)
+        return ret.json()
+
+    def active_stock_list(self):
+        download = self.get('LISTING_STATUS')
+        decoded_content = download.content.decode('utf-8')
+        cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+        stock_list_csv = list(cr)
+        return stock_list_csv
